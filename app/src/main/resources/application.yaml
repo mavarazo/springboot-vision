@@ -1,0 +1,32 @@
+server:
+  port: 8001
+
+spring:
+  main:
+    banner-mode: off
+
+logging:
+  structured:
+    format:
+      console: logstash
+  level:
+    io.github.mavarazo.pocologgo: DEBUG
+    root: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,tracing
+      base-path: /actuator
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      type: w3c
+    baggage:
+      remote-fields:
+        - x-correlation-id
+      correlation:
+        fields:
+          - x-correlation-id
