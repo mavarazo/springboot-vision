@@ -2,6 +2,7 @@ package io.github.mavarazo.pocologgo.app.trace;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;
+import io.micrometer.tracing.handler.TracingObservationHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.spi.LoggingEventBuilder;
@@ -22,11 +23,14 @@ public class RequestObservationContextLogger implements ObservationHandler<Serve
 
         final HttpServletRequest request = context.getCarrier();
 
+
         final String method = request.getMethod();
         final String url = request.getRequestURI();
         final String queryString = request.getQueryString();
 
         final LoggingEventBuilder loggingEventBuilder = log.atInfo()
+                .addKeyValue("traceId", getTraceId(context))
+                .addKeyValue("spanId", getSpanId(context))
                 .addKeyValue("http.method", method)
                 .addKeyValue("http.query", queryString);
 
@@ -52,6 +56,8 @@ public class RequestObservationContextLogger implements ObservationHandler<Serve
         final var logLevel = isError ? log.atWarn() : log.atInfo();
 
         final LoggingEventBuilder loggingEventBuilder = logLevel
+                .addKeyValue("traceId", getTraceId(context))
+                .addKeyValue("spanId", getSpanId(context))
                 .addKeyValue("http.duration-ms", durationMs)
                 .addKeyValue("http.status-code", status);
 
@@ -68,5 +74,21 @@ public class RequestObservationContextLogger implements ObservationHandler<Serve
     @Override
     public boolean supportsContext(final Observation.Context context) {
         return context instanceof ServerRequestObservationContext;
+    }
+
+    private static String getTraceId(final Observation.Context context) {
+        final TracingObservationHandler.TracingContext tracingContext = context.get(TracingObservationHandler.TracingContext.class);
+        if (tracingContext != null && tracingContext.getSpan() != null) {
+            return tracingContext.getSpan().context().traceId();
+        }
+        return null;
+    }
+
+    private static String getSpanId(final Observation.Context context) {
+        final TracingObservationHandler.TracingContext tracingContext = context.get(TracingObservationHandler.TracingContext.class);
+        if (tracingContext != null && tracingContext.getSpan() != null) {
+            return tracingContext.getSpan().context().spanId();
+        }
+        return null;
     }
 }

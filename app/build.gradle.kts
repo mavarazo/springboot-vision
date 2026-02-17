@@ -21,10 +21,15 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-micrometer-tracing-brave")
     implementation("io.micrometer:micrometer-tracing-bridge-brave")
 
+    // JMS
+    implementation("org.springframework.boot:spring-boot-starter-artemis")
+    runtimeOnly("org.apache.activemq:artemis-jakarta-server")
+
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
     testImplementation("org.springframework.boot:spring-boot-restclient")
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
+    testImplementation("org.awaitility:awaitility:4.3.0")
 }
 
 tasks.test {

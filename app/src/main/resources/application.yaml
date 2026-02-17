@@ -2,6 +2,15 @@ server:
   port: 8001
 
 spring:
+  artemis:
+    mode: embedded
+    embedded:
+      enabled: true
+      persistent: false
+      queues: user
+  jms:
+    cache:
+      enabled: false
   main:
     banner-mode: off
 
@@ -30,3 +39,8 @@ management:
       correlation:
         fields:
           - x-correlation-id
+
+pocologgo:
+  jms:
+    queues:
+      user: user
