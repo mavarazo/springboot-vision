@@ -7,10 +7,22 @@ spring:
     embedded:
       enabled: true
       persistent: false
-      queues: user
+      queues: user,order
   jms:
     cache:
       enabled: false
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      auto-offset-reset: earliest
+      group-id: pocologgo
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
   main:
     banner-mode: off
 
@@ -20,6 +32,11 @@ logging:
       console: logstash
   level:
     io.github.mavarazo.pocologgo: DEBUG
+    org.apache.kafka: WARN
+    org.springframework.kafka: WARN
+    org.apache.kafka.clients.NetworkClient: ERROR
+    org.apache.kafka.common.utils.AppInfoParser: ERROR
+    state.change.logger: ERROR
     root: INFO
 
 management:
@@ -38,9 +55,14 @@ management:
         - x-correlation-id
       correlation:
         fields:
-          - x-correlation-id
+          - correlation.id
 
 pocologgo:
   jms:
     queues:
+      order: order
+      user: user
+  kafka:
+    queues:
+      order: order
       user: user

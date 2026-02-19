@@ -5,7 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.MDC;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.filter.ServerHttpObservationFilter;
 
@@ -24,16 +23,9 @@ public abstract class AbstractContextFilter extends OncePerRequestFilter {
                 .ifPresent(observationContext -> {
                     context.forEach((k, v) -> {
                         observationContext.addHighCardinalityKeyValue(KeyValue.of(k, v));
-                        MDC.put(k, v);
                     });
                 });
 
-        try {
-            filterChain.doFilter(request, response);
-        } finally {
-            context.forEach((k, _) -> {
-                MDC.remove(k);
-            });
-        }
+        filterChain.doFilter(request, response);
     }
 }

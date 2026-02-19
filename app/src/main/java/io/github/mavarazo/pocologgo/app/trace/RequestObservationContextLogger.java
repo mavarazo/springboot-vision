@@ -23,7 +23,6 @@ public class RequestObservationContextLogger implements ObservationHandler<Serve
 
         final HttpServletRequest request = context.getCarrier();
 
-
         final String method = request.getMethod();
         final String url = request.getRequestURI();
         final String queryString = request.getQueryString();

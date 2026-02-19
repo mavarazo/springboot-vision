@@ -25,6 +25,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-artemis")
     runtimeOnly("org.apache.activemq:artemis-jakarta-server")
 
+    // Kafka
+    implementation("org.springframework.boot:spring-boot-starter-kafka")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
+
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
     testImplementation("org.springframework.boot:spring-boot-restclient")

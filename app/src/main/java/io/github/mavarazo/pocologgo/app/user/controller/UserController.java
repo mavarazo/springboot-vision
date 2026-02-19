@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsClient;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/users")
@@ -23,6 +25,7 @@ public class UserController {
     private static final Faker FAKER = new Faker();
 
     private final JmsClient jmsClient;
+    private final KafkaTemplate<String, User> kafkaTemplate;
 
     @GetMapping
     public ResponseEntity<List<String>> getUsers() {
@@ -39,9 +42,21 @@ public class UserController {
         return ResponseEntity.ok(names);
     }
 
-    @PostMapping
+    @PostMapping("/jms")
     public ResponseEntity<Void> createUser(@RequestBody final User user) {
         jmsClient.destination("user").send(user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/kafka")
+    public ResponseEntity<Void> updateUser(@RequestBody final User user) {
+        kafkaTemplate.send("user", UUID.randomUUID().toString(), user)
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        log.info("Kafka send success: {}", result.getRecordMetadata().offset());
+                    }
+                });
+
         return ResponseEntity.noContent().build();
     }
 }
