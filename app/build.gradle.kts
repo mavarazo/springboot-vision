@@ -34,6 +34,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-restclient")
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
     testImplementation("org.awaitility:awaitility:4.3.0")
+    testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.0.9")
 }
 
 tasks.test {

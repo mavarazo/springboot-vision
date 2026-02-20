@@ -3,11 +3,12 @@ package io.github.mavarazo.pocologgo.app.trace;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;
 import org.slf4j.MDC;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
-@Order
+@Order(Ordered.LOWEST_PRECEDENCE - 2)
 public class MdcObservationHandler implements ObservationHandler<Observation.Context> {
 
     @Override

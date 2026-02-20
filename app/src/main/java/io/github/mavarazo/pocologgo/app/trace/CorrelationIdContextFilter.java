@@ -2,7 +2,6 @@ package io.github.mavarazo.pocologgo.app.trace;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,7 +12,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@Order(1)
 public class CorrelationIdContextFilter extends AbstractContextFilter {
 
     @Override

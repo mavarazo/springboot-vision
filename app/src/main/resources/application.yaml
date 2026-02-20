@@ -31,7 +31,7 @@ logging:
     format:
       console: logstash
   level:
-    io.github.mavarazo.pocologgo: DEBUG
+    io.github.mavarazo: DEBUG
     org.apache.kafka: WARN
     org.springframework.kafka: WARN
     org.apache.kafka.clients.NetworkClient: ERROR
