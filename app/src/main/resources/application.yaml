@@ -52,7 +52,7 @@ management:
       type: w3c
     baggage:
       remote-fields:
-        - x-correlation-id
+        - correlation.id
       correlation:
         fields:
           - correlation.id

@@ -39,10 +39,12 @@ Send a POST request to create a user via JMS.
 ```bash
 curl -X POST http://localhost:8001/v1/users/jms 
      -H "Content-Type: application/json" 
-     -H "X-Correlation-ID: custom-corr-123" 
+     -H "x-correlation-id: custom-corr-123" 
      -d '{"name": "John Doe", "email": "john@example.com"}'
 ```
-Check the logs to see how the `X-Correlation-ID` and `trace.id` are propagated from the HTTP controller to the JMS consumer.
+
+Check the logs to see how the `x-correlation-id` and `trace.id` are propagated from the HTTP controller to the JMS
+consumer.
 
 ### HTTP to Kafka Propagation
 Send a POST request to update a user via Kafka.
@@ -65,7 +67,7 @@ The `MdcObservationHandler` is a custom `ObservationHandler` that iterates throu
 ### Context Filters
 - `AuthContextFilter`: Extracts `Authorization` header metadata.
 - `ClientContextFilter`: Extracts `X-Client-ID` and `X-Client-Version`.
-- `CorrelationIdFilter`: Extracts `X-Correlation-ID` or generates a new one.
+- `CorrelationIdFilter`: Extracts `x-correlation-id` or generates a new one.
 
 These filters interact with `ServerHttpObservationFilter` to enrich the observation context before it propagates further.
 

@@ -26,7 +26,7 @@ public class ClientContextFilter extends AbstractContextFilter {
     private final ClientContextProperties properties;
 
     @Override
-    protected Map<String, String> getContext(final HttpServletRequest request, final HttpServletResponse response) {
+    protected Map<String, String> addLowCardinalityKeyValue(final HttpServletRequest request, final HttpServletResponse response) {
         final Map<String, String> result = new HashMap<>();
 
         result.put("client.ip", request.getRemoteAddr());

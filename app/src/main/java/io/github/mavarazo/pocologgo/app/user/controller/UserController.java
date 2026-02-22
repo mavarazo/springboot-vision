@@ -1,10 +1,13 @@
 package io.github.mavarazo.pocologgo.app.user.controller;
 
+import io.github.mavarazo.pocologgo.app.common.exception.TechnicalException;
 import io.github.mavarazo.pocologgo.app.ssn.service.SocialInsuranceAdapter;
+import io.github.mavarazo.pocologgo.app.user.exception.NotFoundException;
 import io.github.mavarazo.pocologgo.app.user.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsClient;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -13,6 +16,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,7 +48,14 @@ public class UserController {
 
     @PostMapping("/jms")
     public ResponseEntity<Void> createUser(@RequestBody final String ssn) {
-        final User user = socialInsuranceAdapter.getUserBySocialInsuranceNo(ssn);
+        final User user;
+        try {
+            user = socialInsuranceAdapter.getUserBySocialInsuranceNo(ssn);
+        } catch (final HttpClientErrorException ex) {
+            throw NotFoundException.ofUserBySnn(ssn);
+        } catch (final HttpServerErrorException ex) {
+            throw new TechnicalException(HttpStatus.SERVICE_UNAVAILABLE, "user.ssn.service-unavailable", ex);
+        }
 
         jmsClient.destination("user").send(user);
         return ResponseEntity.noContent().build();

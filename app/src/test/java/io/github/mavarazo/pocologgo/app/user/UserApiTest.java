@@ -3,6 +3,7 @@ package io.github.mavarazo.pocologgo.app.user;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import io.github.mavarazo.pocologgo.app.user.model.User;
 import io.github.mavarazo.pocologgo.app.user.service.UserConsumer;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.test.context.EmbeddedKafka;
@@ -69,7 +71,7 @@ class UserApiTest {
             // assert
             assertThat(response)
                     .satisfies(r -> assertThat(r.getHeaders())
-                            .satisfies(h -> assertThat(h.get("X-Correlation-ID"))
+                            .satisfies(h -> assertThat(h.get("x-correlation-id"))
                                     .isNotEmpty()
                             )
                     )
@@ -91,7 +93,7 @@ class UserApiTest {
             // assert
             assertThat(response)
                     .satisfies(r -> assertThat(r.getHeaders())
-                            .satisfies(h -> assertThat(h.get("X-Correlation-ID"))
+                            .satisfies(h -> assertThat(h.get("x-correlation-id"))
                                     .singleElement()
                                     .isEqualTo("12345")
                             )
@@ -110,141 +112,213 @@ class UserApiTest {
                     .willReturn(okForJson(new User("Foo", "Bingo", "123-45-6789"))));
         }
 
-        @Test
-        void status204_with_jms() {
-            // arrange
-            final String requestBody = "123-45-6789";
+        @Nested
+        class JmsTests {
 
-            final HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("user", "password");
-            final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/jms"));
+            @Test
+            void status204() {
+                // arrange
+                final String requestBody = "123-45-6789";
 
-            // act
-            final ResponseEntity<Void> response = testRestTemplate.exchange(requestEntity, Void.class);
+                final HttpHeaders headers = new HttpHeaders();
+                headers.setBasicAuth("user", "password");
+                final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/jms"));
 
-            // assert
-            assertThat(response)
-                    .satisfies(r -> assertThat(r.getStatusCode())
-                            .isEqualTo(HttpStatus.NO_CONTENT)
-                    );
+                // act
+                final ResponseEntity<Void> response = testRestTemplate.exchange(requestEntity, Void.class);
 
-            WireMock.verify(getRequestedFor(urlPathTemplate("/v1/social-insurances/{ssn}"))
-                    .withHeader("X-Correlation-ID", matching("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$")));
+                // assert
+                assertThat(response)
+                        .satisfies(r -> assertThat(r.getStatusCode())
+                                .isEqualTo(HttpStatus.NO_CONTENT)
+                        );
 
-            await()
-                    .atMost(5, TimeUnit.SECONDS)
-                    .untilAsserted(() -> {
-                        final ArgumentCaptor<User> userArgument = ArgumentCaptor.forClass(User.class);
-                        verify(userConsumer).listenJms(userArgument.capture());
-                        assertThat(userArgument.getValue())
-                                .returns("Foo", User::firstName)
-                                .returns("Bingo", User::lastName)
-                                .returns("123-45-6789", User::ssn);
-                    });
+                WireMock.verify(getRequestedFor(urlPathTemplate("/v1/social-insurances/{ssn}"))
+                        .withHeader("x-correlation-id", matching("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$")));
+
+                await()
+                        .atMost(5, TimeUnit.SECONDS)
+                        .untilAsserted(() -> {
+                            final ArgumentCaptor<User> userArgument = ArgumentCaptor.forClass(User.class);
+                            verify(userConsumer).listenJms(userArgument.capture());
+                            assertThat(userArgument.getValue())
+                                    .returns("Foo", User::firstName)
+                                    .returns("Bingo", User::lastName)
+                                    .returns("123-45-6789", User::ssn);
+                        });
+            }
+
+            @Test
+            void status204_with_external_correlation_id() {
+                // arrange
+                final String requestBody = "123-45-6789";
+
+                final HttpHeaders headers = new HttpHeaders();
+                headers.setBasicAuth("user", "password");
+                headers.add("x-correlation-id", "12345");
+                final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/jms"));
+
+                // act
+                final ResponseEntity<Void> response = testRestTemplate.exchange(requestEntity, Void.class);
+
+                // assert
+                assertThat(response)
+                        .satisfies(r -> assertThat(r.getStatusCode())
+                                .isEqualTo(HttpStatus.NO_CONTENT)
+                        );
+
+
+                WireMock.verify(getRequestedFor(urlPathTemplate("/v1/social-insurances/{ssn}"))
+                        .withHeader("x-correlation-id", equalTo("12345")));
+
+                await()
+                        .atMost(5, TimeUnit.SECONDS)
+                        .untilAsserted(() -> {
+                            final ArgumentCaptor<User> userArgument = ArgumentCaptor.forClass(User.class);
+                            verify(userConsumer).listenJms(userArgument.capture());
+                            assertThat(userArgument.getValue())
+                                    .returns("Foo", User::firstName)
+                                    .returns("Bingo", User::lastName)
+                                    .returns("123-45-6789", User::ssn);
+                        });
+            }
+
+            @Test
+            void status404() {
+                // arrange
+                stubFor(get(urlPathTemplate("/v1/social-insurances/{ssn}"))
+                        .willReturn(WireMock.notFound()));
+
+                final String requestBody = "123-45-6789";
+
+                final HttpHeaders headers = new HttpHeaders();
+                headers.setBasicAuth("user", "password");
+                headers.add("x-correlation-id", "12345");
+                final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/jms"));
+
+                // act
+                final ResponseEntity<ProblemDetail> response = testRestTemplate.exchange(requestEntity, ProblemDetail.class);
+
+                // assert
+                assertThat(response)
+                        .satisfies(r -> assertThat(r.getStatusCode())
+                                .isEqualTo(HttpStatus.NOT_FOUND)
+                        )
+                        .satisfies(r -> assertThat(r.getBody())
+                                .returns(HttpStatus.NOT_FOUND.value(), ProblemDetail::getStatus)
+                                .returns("Not Found", ProblemDetail::getTitle)
+                                .returns("user.not-found", ProblemDetail::getDetail)
+                                .doesNotReturn(null, p -> p.getProperties().get("trace.id"))
+                                .returns("12345", p -> p.getProperties().get("correlation.id"))
+                                .satisfies(p -> assertThat(p.getProperties().get("parameters"))
+                                        .asInstanceOf(InstanceOfAssertFactories.MAP)
+                                        .hasEntrySatisfying("ssn", v -> assertThat(v).isEqualTo("123-45-6789"))
+                                )
+                        );
+            }
+
+            @Test
+            void status503() {
+                // arrange
+                stubFor(get(urlPathTemplate("/v1/social-insurances/{ssn}"))
+                        .willReturn(WireMock.serverError()));
+
+                final String requestBody = "123-45-6789";
+
+                final HttpHeaders headers = new HttpHeaders();
+                headers.setBasicAuth("user", "password");
+                headers.add("x-correlation-id", "12345");
+                final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/jms"));
+
+                // act
+                final ResponseEntity<ProblemDetail> response = testRestTemplate.exchange(requestEntity, ProblemDetail.class);
+
+                // assert
+                assertThat(response)
+                        .satisfies(r -> assertThat(r.getStatusCode())
+                                .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
+                        )
+                        .satisfies(r -> assertThat(r.getBody())
+                                .returns(HttpStatus.SERVICE_UNAVAILABLE.value(), ProblemDetail::getStatus)
+                                .returns("Service Unavailable", ProblemDetail::getTitle)
+                                .returns("user.ssn.service-unavailable", ProblemDetail::getDetail)
+                                .doesNotReturn(null, p -> p.getProperties().get("trace.id"))
+                                .returns("12345", p -> p.getProperties().get("correlation.id"))
+                        );
+            }
         }
 
-        @Test
-        void status204_with_jms_and_external_correlation_id() {
-            // arrange
-            final String requestBody = "123-45-6789";
+        @Nested
+        class KafkaTests {
 
-            final HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("user", "password");
-            headers.add("X-Correlation-ID", "12345");
-            final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/jms"));
+            @Test
+            void status204() {
+                // arrange
+                final String requestBody = "123-45-6789";
 
-            // act
-            final ResponseEntity<Void> response = testRestTemplate.exchange(requestEntity, Void.class);
+                final HttpHeaders headers = new HttpHeaders();
+                headers.setBasicAuth("user", "password");
+                final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/kafka"));
 
-            // assert
-            assertThat(response)
-                    .satisfies(r -> assertThat(r.getStatusCode())
-                            .isEqualTo(HttpStatus.NO_CONTENT)
-                    );
+                // act
+                final ResponseEntity<Void> response = testRestTemplate.exchange(requestEntity, Void.class);
 
-
-            WireMock.verify(getRequestedFor(urlPathTemplate("/v1/social-insurances/{ssn}"))
-                    .withHeader("X-Correlation-ID", equalTo("12345")));
-
-            await()
-                    .atMost(5, TimeUnit.SECONDS)
-                    .untilAsserted(() -> {
-                        final ArgumentCaptor<User> userArgument = ArgumentCaptor.forClass(User.class);
-                        verify(userConsumer).listenJms(userArgument.capture());
-                        assertThat(userArgument.getValue())
-                                .returns("Foo", User::firstName)
-                                .returns("Bingo", User::lastName)
-                                .returns("123-45-6789", User::ssn);
-                    });
-        }
-
-        @Test
-        void status204_with_kafka() {
-            // arrange
-            final String requestBody = "123-45-6789";
-
-            final HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("user", "password");
-            final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/kafka"));
-
-            // act
-            final ResponseEntity<Void> response = testRestTemplate.exchange(requestEntity, Void.class);
-
-            // assert
-            assertThat(response)
-                    .satisfies(r -> assertThat(r.getStatusCode())
-                            .isEqualTo(HttpStatus.NO_CONTENT)
-                    );
+                // assert
+                assertThat(response)
+                        .satisfies(r -> assertThat(r.getStatusCode())
+                                .isEqualTo(HttpStatus.NO_CONTENT)
+                        );
 
 
-            WireMock.verify(getRequestedFor(urlPathTemplate("/v1/social-insurances/{ssn}"))
-                    .withHeader("X-Correlation-ID", matching("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$")));
+                WireMock.verify(getRequestedFor(urlPathTemplate("/v1/social-insurances/{ssn}"))
+                        .withHeader("x-correlation-id", matching("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$")));
 
-            await()
-                    .atMost(5, TimeUnit.SECONDS)
-                    .untilAsserted(() -> {
-                        final ArgumentCaptor<User> userArgument = ArgumentCaptor.forClass(User.class);
-                        verify(userConsumer).listenKafka(userArgument.capture());
-                        assertThat(userArgument.getValue())
-                                .returns("Foo", User::firstName)
-                                .returns("Bingo", User::lastName)
-                                .returns("123-45-6789", User::ssn);
-                    });
-        }
+                await()
+                        .atMost(5, TimeUnit.SECONDS)
+                        .untilAsserted(() -> {
+                            final ArgumentCaptor<User> userArgument = ArgumentCaptor.forClass(User.class);
+                            verify(userConsumer).listenKafka(userArgument.capture());
+                            assertThat(userArgument.getValue())
+                                    .returns("Foo", User::firstName)
+                                    .returns("Bingo", User::lastName)
+                                    .returns("123-45-6789", User::ssn);
+                        });
+            }
 
-        @Test
-        void status204_with_kafka_and_external_correlation_id() {
-            // arrange
-            final String requestBody = "123-45-6789";
+            @Test
+            void status204_with_external_correlation_id() {
+                // arrange
+                final String requestBody = "123-45-6789";
 
-            final HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("user", "password");
-            headers.add("X-Correlation-ID", "12345");
-            final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/kafka"));
+                final HttpHeaders headers = new HttpHeaders();
+                headers.setBasicAuth("user", "password");
+                headers.add("x-correlation-id", "12345");
+                final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/users/kafka"));
 
-            // act
-            final ResponseEntity<Void> response = testRestTemplate.exchange(requestEntity, Void.class);
+                // act
+                final ResponseEntity<Void> response = testRestTemplate.exchange(requestEntity, Void.class);
 
-            // assert
-            assertThat(response)
-                    .satisfies(r -> assertThat(r.getStatusCode())
-                            .isEqualTo(HttpStatus.NO_CONTENT)
-                    );
+                // assert
+                assertThat(response)
+                        .satisfies(r -> assertThat(r.getStatusCode())
+                                .isEqualTo(HttpStatus.NO_CONTENT)
+                        );
 
 
-            WireMock.verify(getRequestedFor(urlPathTemplate("/v1/social-insurances/{ssn}"))
-                    .withHeader("X-Correlation-ID", WireMock.matching("12345")));
+                WireMock.verify(getRequestedFor(urlPathTemplate("/v1/social-insurances/{ssn}"))
+                        .withHeader("x-correlation-id", WireMock.matching("12345")));
 
-            await()
-                    .atMost(5, TimeUnit.SECONDS)
-                    .untilAsserted(() -> {
-                        final ArgumentCaptor<User> userArgument = ArgumentCaptor.forClass(User.class);
-                        verify(userConsumer).listenKafka(userArgument.capture());
-                        assertThat(userArgument.getValue())
-                                .returns("Foo", User::firstName)
-                                .returns("Bingo", User::lastName)
-                                .returns("123-45-6789", User::ssn);
-                    });
+                await()
+                        .atMost(5, TimeUnit.SECONDS)
+                        .untilAsserted(() -> {
+                            final ArgumentCaptor<User> userArgument = ArgumentCaptor.forClass(User.class);
+                            verify(userConsumer).listenKafka(userArgument.capture());
+                            assertThat(userArgument.getValue())
+                                    .returns("Foo", User::firstName)
+                                    .returns("Bingo", User::lastName)
+                                    .returns("123-45-6789", User::ssn);
+                        });
+            }
         }
     }
 }

@@ -20,7 +20,7 @@ public class AuthContextFilter extends AbstractContextFilter {
     private static final String TYPE = "auth.type";
 
     @Override
-    protected Map<String, String> getContext(final HttpServletRequest request, final HttpServletResponse response) {
+    protected Map<String, String> addLowCardinalityKeyValue(final HttpServletRequest request, final HttpServletResponse response) {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         final Map<String, String> result = new HashMap<>();
