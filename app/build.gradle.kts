@@ -4,6 +4,12 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 }
 
+dependencyManagement {
+    imports {
+        mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    }
+}
+
 dependencies {
     // Lombok
     annotationProcessor("org.projectlombok:lombok")
@@ -18,9 +24,7 @@ dependencies {
     implementation("net.datafaker:datafaker:2.5.4")
 
     // Observation
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-micrometer-tracing-brave")
-    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation(project(":shared-tracing"))
 
     // JMS
     implementation("org.springframework.boot:spring-boot-starter-artemis")

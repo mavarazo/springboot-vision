@@ -1,4 +1,4 @@
-package io.github.mavarazo.vision.trace;
+package io.github.mavarazo.vision.shared.tracing.filter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

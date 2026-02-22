@@ -1,4 +1,4 @@
-package io.github.mavarazo.vision.trace;
+package io.github.mavarazo.vision.shared.tracing.handler;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;

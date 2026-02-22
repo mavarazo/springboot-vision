@@ -1,4 +1,4 @@
-package io.github.mavarazo.vision.trace;
+package io.github.mavarazo.vision.shared.tracing.filter;
 
 import lombok.Getter;
 import lombok.Setter;

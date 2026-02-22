@@ -1,4 +1,4 @@
-package io.github.mavarazo.vision;
+package io.github.mavarazo.vision.shared.tracing;
 
 import brave.baggage.BaggageFields;
 import brave.baggage.CorrelationScopeConfig;

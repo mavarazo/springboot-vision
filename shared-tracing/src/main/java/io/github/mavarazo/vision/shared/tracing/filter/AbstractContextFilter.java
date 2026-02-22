@@ -1,4 +1,4 @@
-package io.github.mavarazo.vision.trace;
+package io.github.mavarazo.vision.shared.tracing.filter;
 
 import io.micrometer.common.KeyValue;
 import jakarta.servlet.FilterChain;
