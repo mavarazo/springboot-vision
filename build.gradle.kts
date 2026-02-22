@@ -6,7 +6,7 @@ plugins {
 
 group = "io.github.mavarazo"
 version = "0.0.1-SNAPSHOT"
-description = "pocologgo"
+description = "vision"
 
 java {
     toolchain {

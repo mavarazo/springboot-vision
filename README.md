@@ -1,6 +1,6 @@
-# pocologgo
+# Vision
 
-**pocologgo** is a Proof of Concept (PoC) demonstrating advanced distributed tracing and structured logging with **Spring Boot 4.0.2** and **Java 25**. This project showcases how to seamlessly propagate trace contexts across different communication protocols, including **HTTP**, **JMS**, and **Kafka**, using **Micrometer Tracing** and **Brave**.
+**vision** is a Proof of Concept (PoC) demonstrating advanced distributed tracing and structured logging with **Spring Boot 4.0.2** and **Java 25**. This project showcases how to seamlessly propagate trace contexts across different communication protocols, including **HTTP**, **JMS**, and **Kafka**, using **Micrometer Tracing** and **Brave**.
 
 ## 🚀 Features
 

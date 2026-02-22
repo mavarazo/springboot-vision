@@ -1,3 +1,3 @@
-rootProject.name = "pocologgo"
+rootProject.name = "vision"
 
 include("app")

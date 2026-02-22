@@ -3,6 +3,6 @@ management:
     sampling:
       probability: 1.0
 
-pocologgo:
+vision:
   social-insurance:
     endpoint: https://localhost

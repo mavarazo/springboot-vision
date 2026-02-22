@@ -18,7 +18,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
       auto-offset-reset: earliest
-      group-id: pocologgo
+      group-id: vision
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
@@ -57,7 +57,7 @@ management:
         fields:
           - correlation.id
 
-pocologgo:
+vision:
   jms:
     queues:
       order: order
