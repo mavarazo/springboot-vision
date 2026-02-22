@@ -60,9 +60,9 @@ management:
 vision:
   jms:
     queues:
-      order: order
-      user: user
+      accident: accident
+      booking: booking
   kafka:
     queues:
-      order: order
-      user: user
+      accident: accident
+      booking: booking

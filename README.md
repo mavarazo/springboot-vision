@@ -35,7 +35,7 @@ The application will start on port `8001`.
 ## 🧪 Testing Tracing
 
 ### HTTP to JMS Propagation
-Send a POST request to create a user via JMS.
+Send a POST request to create a order via JMS.
 ```bash
 curl -X POST http://localhost:8001/v1/users/jms 
      -H "Content-Type: application/json" 
@@ -47,7 +47,7 @@ Check the logs to see how the `x-correlation-id` and `trace.id` are propagated f
 consumer.
 
 ### HTTP to Kafka Propagation
-Send a POST request to update a user via Kafka.
+Send a POST request to update a order via Kafka.
 ```bash
 curl -X POST http://localhost:8001/v1/users/kafka 
      -H "Content-Type: application/json" 

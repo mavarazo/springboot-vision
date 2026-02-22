@@ -4,5 +4,5 @@ management:
       probability: 1.0
 
 vision:
-  social-insurance:
+  insurance:
     endpoint: https://localhost
