@@ -1,5 +1,6 @@
 package io.github.mavarazo.vision.rental.service;
 
+import io.github.mavarazo.vision.rental.exception.FraudException;
 import io.github.mavarazo.vision.rental.model.Booking;
 import io.github.mavarazo.vision.rental.model.BookingConfirmationDto;
 import io.github.mavarazo.vision.rental.model.BookingRequestDto;
@@ -17,6 +18,10 @@ public class BookingCreateService {
     private final JmsClient jmsClient;
 
     public BookingConfirmationDto createBooking(final BookingRequestDto bookingRequestDto) {
+        if (bookingRequestDto.upto().isEqual(LocalDate.of(9999, 12, 31))) {
+            throw FraudException.ofUnusualLongRentalTime();
+        }
+
         final UUID vehicleId = bookingRequestDto.vehicleId();
         final LocalDate from = bookingRequestDto.from();
         final LocalDate upto = bookingRequestDto.upto();

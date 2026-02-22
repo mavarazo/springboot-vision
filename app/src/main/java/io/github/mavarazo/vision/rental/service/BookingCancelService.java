@@ -1,7 +1,7 @@
 package io.github.mavarazo.vision.rental.service;
 
 import io.github.mavarazo.vision.insurance.service.InsuranceAdapter;
-import io.github.mavarazo.vision.rental.exception.NotFoundException;
+import io.github.mavarazo.vision.rental.exception.UnprocessableContentException;
 import io.github.mavarazo.vision.rental.model.Booking;
 import io.github.mavarazo.vision.shared.exception.TechnicalException;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class BookingCancelService {
         try {
             insuranceAdapter.deleteInsurance(insuranceId);
         } catch (final HttpClientErrorException ex) {
-            throw NotFoundException.ofInsurance(insuranceId);
+            throw UnprocessableContentException.ofInsurance(insuranceId);
         } catch (final HttpServerErrorException ex) {
             throw new TechnicalException(HttpStatus.SERVICE_UNAVAILABLE, "insurance.service-unavailable", ex);
         }
