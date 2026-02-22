@@ -1,80 +1,67 @@
-# Vision
+# Spring Boot Vision: Modern Architectural Blueprint
 
-**vision** is a Proof of Concept (PoC) demonstrating advanced distributed tracing and structured logging with **Spring Boot 4.0.2** and **Java 25**. This project showcases how to seamlessly propagate trace contexts across different communication protocols, including **HTTP**, **JMS**, and **Kafka**, using **Micrometer Tracing** and **Brave**.
-
-## 🚀 Features
-
-- **Spring Boot 4.0.2 & Java 25**: Leverages the latest Spring Framework features and Java's modern capabilities.
-- **Unified Distributed Tracing**:
-  - **HTTP**: Standard observation for REST endpoints.
-  - **JMS**: Tracing for message production and consumption via Spring JMS (Artemis).
-  - **Kafka**: Observation-enabled Kafka production and consumption.
-- **Custom Context Propagation**:
-  - **Context Filters**: Extracts custom headers (Auth, Client, Correlation ID) from HTTP requests and attaches them to the Micrometer Observation context.
-  - **MDC Bridge**: Automatically synchronizes Micrometer Observation tags into the SLF4J MDC for consistent logging across the entire request lifecycle.
-- **Structured Logging**: Configured with Logstash-formatted console logging for better observability and log analysis in ELK/Grafana Loki stacks.
-- **Embedded JMS**: Uses an embedded Apache ActiveMQ Artemis server for easy demonstration.
-
-## 🛠 Prerequisites
-
-- **Java 25** (Oracle OpenJDK or GraalVM recommended)
-- **Gradle** (included via `./gradlew`)
-- **Kafka**: A local Kafka broker running at `localhost:9092` (required for Kafka features).
-
-## 🏃 How to Run
-
-### 1. Start Kafka (Optional)
-Ensure you have a Kafka broker running if you intend to test Kafka tracing.
-
-### 2. Run the Application
-```bash
-./gradlew bootRun
-```
-The application will start on port `8001`.
-
-## 🧪 Testing Tracing
-
-### HTTP to JMS Propagation
-Send a POST request to create a order via JMS.
-```bash
-curl -X POST http://localhost:8001/v1/users/jms 
-     -H "Content-Type: application/json" 
-     -H "x-correlation-id: custom-corr-123" 
-     -d '{"name": "John Doe", "email": "john@example.com"}'
-```
-
-Check the logs to see how the `x-correlation-id` and `trace.id` are propagated from the HTTP controller to the JMS
-consumer.
-
-### HTTP to Kafka Propagation
-Send a POST request to update a order via Kafka.
-```bash
-curl -X POST http://localhost:8001/v1/users/kafka 
-     -H "Content-Type: application/json" 
-     -H "X-Client-ID: mobile-app" 
-     -d '{"id": "1", "name": "Jane Doe"}'
-```
-Observe the Kafka consumer logs showing the same trace identifiers and client metadata.
-
-## 🏗 Architecture Details
-
-### Observation Configuration
-The `ObservationConfig` customizes the `CurrentTraceContext` to ensure `trace.id` and `span.id` are correctly mapped to MDC keys.
-
-### MDC Observation Handler
-The `MdcObservationHandler` is a custom `ObservationHandler` that iterates through all key-values in an observation context and puts them into the MDC when a scope is opened, ensuring that all custom metadata (like correlation IDs) is present in every log line.
-
-### Context Filters
-- `AuthContextFilter`: Extracts `Authorization` header metadata.
-- `ClientContextFilter`: Extracts `X-Client-ID` and `X-Client-Version`.
-- `CorrelationIdFilter`: Extracts `x-correlation-id` or generates a new one.
-
-These filters interact with `ServerHttpObservationFilter` to enrich the observation context before it propagates further.
-
-## 📊 Monitoring
-Actuator endpoints are enabled at `/actuator`:
-- `health`: `http://localhost:8001/actuator/health`
-- `tracing`: `http://localhost:8001/actuator/tracing` (Displays current trace propagation details)
+**Spring Boot Vision** is a reference architecture for modern, production-ready backend applications. It demonstrates a
+clean, multi-module structure leveraging the latest features of **Spring Boot 4.0.2** and **Java 25**, with a primary
+focus on explicit exception handling and native observability.
 
 ---
-Developed as a PoC for modern observability patterns in Spring Boot applications.
+
+## 🏗 Architectural Goals
+
+The goal of this project is to showcase a robust and scalable architecture that adheres to the following principles:
+
+### 1. Explicit Exception Handling (RFC 7807)
+
+A clear distinction between business-related errors and technical system failures, using the standardized *
+*ProblemDetail** format for consistent API responses.
+
+- **Business Exceptions**: Represent functional errors (e.g., `FraudException`, `UnprocessableContentException`). These
+  are typically handled with `4xx` HTTP status codes and can be marked as `Alertable` if they require immediate
+  attention.
+- **Technical Exceptions**: Represent infrastructure or system-level failures (e.g., database connection issues,
+  external service timeouts). These are mapped to `5xx` HTTP status codes.
+- **ProblemDetail (RFC 7807)**: Every error response includes a standardized JSON body containing:
+  - Status code and title.
+  - Application-specific `error_code`.
+  - `trace.id` and `correlation.id` for cross-system debugging.
+  - Dynamic `parameters` for contextual error information.
+
+### 2. Native Observability with Micrometer Observation
+
+Built-in tracing and monitoring using the **Micrometer Observation API**, ensuring that observability is a first-class
+citizen rather than an afterthought.
+
+- **Unified Observation**: A single API to handle both metrics and tracing.
+- **Context Propagation**: Automatic propagation of trace contexts across different protocols:
+  - **HTTP**: Standard REST endpoint observation.
+  - **JMS (Artemis)**: Tracing for asynchronous message production and consumption.
+  - **Kafka**: Observation-enabled event-driven communication.
+- **Custom Metadata**: Automated extraction and propagation of `Correlation-ID`, `Client-ID`, and `Auth` metadata
+  through custom filters and MDC bridging.
+
+---
+
+## 📂 Project Structure
+
+The project follows a modular design to promote reusability and separation of concerns:
+
+- **`app`**: The core application module containing business domains (Accident, Rental, Vehicle). It implements the
+  actual business logic and API controllers.
+- **`shared-exception`**: A reusable library defining the base exception hierarchy (`AbstractException`,
+  `BusinessException`, `TechnicalException`) and the `Alertable` contract.
+- **`shared-tracing`**: Infrastructure module that configures Micrometer Observation, MDC handlers, and context filters
+  for unified tracing across the system.
+
+---
+
+## 🛠 Technology Stack
+
+- **Runtime**: Java 25
+- **Framework**: Spring Boot 4.0.2
+- **Observability**: Micrometer Observation, Brave (Tracing), SLF4J (MDC)
+- **Messaging**: Apache ActiveMQ Artemis (JMS), Kafka
+- **Build Tool**: Gradle (Kotlin DSL)
+
+---
+
+Developed as a showcase for modern observability and architectural patterns in Spring Boot.
