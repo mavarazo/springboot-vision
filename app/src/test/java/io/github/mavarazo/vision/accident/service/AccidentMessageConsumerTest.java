@@ -1,6 +1,6 @@
 package io.github.mavarazo.vision.accident.service;
 
-import io.github.mavarazo.vision.accident.model.Accident;
+import io.github.mavarazo.vision.accident.model.AccidentMessage;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.verify;
         topics = {"accident"}
 )
 @ActiveProfiles("test")
-class AccidentConsumerTest {
+class AccidentMessageConsumerTest {
 
     @Autowired
     private EmbeddedKafkaBroker embeddedKafka;
@@ -46,7 +46,7 @@ class AccidentConsumerTest {
             // arrange
 
             // act
-            jmsTemplate.convertAndSend("accident", new Accident(UUID.randomUUID(), UUID.randomUUID()));
+            jmsTemplate.convertAndSend("accident", new AccidentMessage(UUID.randomUUID(), UUID.randomUUID()));
 
             // assert
             await()
@@ -59,12 +59,12 @@ class AccidentConsumerTest {
     class ListenKafkaTests {
 
         @Autowired
-        private KafkaTemplate<String, Accident> kafkaTemplate;
+        private KafkaTemplate<String, AccidentMessage> kafkaTemplate;
 
         @Test
         void listen_for_new_accident() {
             // act
-            kafkaTemplate.send("accident", new Accident(UUID.randomUUID(), UUID.randomUUID()));
+            kafkaTemplate.send("accident", new AccidentMessage(UUID.randomUUID(), UUID.randomUUID()));
 
             // assert
             await()

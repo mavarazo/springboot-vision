@@ -1,7 +1,7 @@
 package io.github.mavarazo.vision;
 
-import io.github.mavarazo.vision.accident.model.Accident;
-import io.github.mavarazo.vision.rental.model.Booking;
+import io.github.mavarazo.vision.accident.model.AccidentMessage;
+import io.github.mavarazo.vision.rental.model.RentalMessage;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -25,15 +25,15 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, Accident> accidentKafkaTemplateKafkaTemplate(final ProducerFactory<String, Accident> pf) {
-        final KafkaTemplate<String, Accident> template = new KafkaTemplate<>(pf);
+    public KafkaTemplate<String, AccidentMessage> accidentKafkaTemplate(final ProducerFactory<String, AccidentMessage> pf) {
+        final KafkaTemplate<String, AccidentMessage> template = new KafkaTemplate<>(pf);
         template.setObservationEnabled(true);
         return template;
     }
 
     @Bean
-    public KafkaTemplate<String, Booking> orderKafkaTemplate(final ProducerFactory<String, Booking> pf) {
-        final KafkaTemplate<String, Booking> template = new KafkaTemplate<>(pf);
+    public KafkaTemplate<String, RentalMessage> rentalKafkaTemplate(final ProducerFactory<String, RentalMessage> pf) {
+        final KafkaTemplate<String, RentalMessage> template = new KafkaTemplate<>(pf);
         template.setObservationEnabled(true);
         return template;
     }

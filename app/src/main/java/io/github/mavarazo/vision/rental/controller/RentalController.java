@@ -1,9 +1,9 @@
 package io.github.mavarazo.vision.rental.controller;
 
-import io.github.mavarazo.vision.rental.model.BookingConfirmationDto;
-import io.github.mavarazo.vision.rental.model.BookingRequestDto;
-import io.github.mavarazo.vision.rental.service.BookingCancelService;
-import io.github.mavarazo.vision.rental.service.BookingCreateService;
+import io.github.mavarazo.vision.rental.model.RentalConfirmationDto;
+import io.github.mavarazo.vision.rental.model.RentalRequestDto;
+import io.github.mavarazo.vision.rental.service.RentalCreateService;
+import io.github.mavarazo.vision.rental.service.RetnalCancelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,17 +20,17 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RentalController {
 
-    private final BookingCreateService bookingCreateService;
-    private final BookingCancelService bookingCancelService;
+    private final RentalCreateService rentalCreateService;
+    private final RetnalCancelService retnalCancelService;
 
     @PostMapping
-    public ResponseEntity<BookingConfirmationDto> createBooking(@RequestBody final BookingRequestDto bookingRequestDto) {
-        return ResponseEntity.ok(bookingCreateService.createBooking(bookingRequestDto));
+    public ResponseEntity<RentalConfirmationDto> create(@RequestBody final RentalRequestDto rentalRequestDto) {
+        return ResponseEntity.ok(rentalCreateService.createRental(rentalRequestDto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelBooking(@PathVariable final UUID id) {
-        bookingCancelService.cancelBooking(id);
+    public ResponseEntity<Void> cancel(@PathVariable final UUID id) {
+        retnalCancelService.cancelRental(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -3,6 +3,13 @@ management:
     sampling:
       probability: 1.0
 
+spring:
+  datasource:
+    url: jdbc:h2:mem:vision
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+
 vision:
   insurance:
     endpoint: https://localhost

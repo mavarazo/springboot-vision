@@ -1,10 +1,13 @@
 package io.github.mavarazo.vision.rental;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import io.github.mavarazo.vision.rental.model.Booking;
-import io.github.mavarazo.vision.rental.model.BookingConfirmationDto;
-import io.github.mavarazo.vision.rental.model.BookingRequestDto;
-import io.github.mavarazo.vision.rental.service.BookingConsumer;
+import io.github.mavarazo.TestDataManager;
+import io.github.mavarazo.TestDataManagerTestConfig;
+import io.github.mavarazo.vision.rental.model.RentalConfirmationDto;
+import io.github.mavarazo.vision.rental.model.RentalMessage;
+import io.github.mavarazo.vision.rental.model.RentalRequestDto;
+import io.github.mavarazo.vision.rental.service.RentalConsumer;
+import io.github.mavarazo.vision.shared.persistence.entity.Rental;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -40,9 +44,10 @@ import static org.mockito.Mockito.verify;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @AutoConfigureTestRestTemplate
+@Import(TestDataManagerTestConfig.class)
 @EmbeddedKafka(
         partitions = 1,
-        topics = {"booking"}
+        topics = {"rental"}
 )
 @EnableWireMock(
         @ConfigureWireMock(baseUrlProperties = "vision.insurance.endpoint")
@@ -52,28 +57,31 @@ class RentalApiTest {
     @Autowired
     private TestRestTemplate testRestTemplate;
 
+    @Autowired
+    private TestDataManager testDataManager;
+
     @MockitoSpyBean
-    private BookingConsumer bookingConsumer;
+    private RentalConsumer rentalConsumer;
 
     @Nested
-    class CreateBookingTests {
+    class CreateRentalTests {
 
         @ParameterizedTest
         @NullSource
         @ValueSource(strings = "56750ce5-0e45-4664-9caa-fc0fe1d5b4c9")
         void status204(final String correlationId) {
             // arrange
-            final BookingRequestDto requestBody = new BookingRequestDto(UUID.randomUUID(), LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31));
+            final RentalRequestDto requestBody = new RentalRequestDto(UUID.randomUUID(), LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31));
 
             final HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth("user", "password");
             if (correlationId != null) {
                 headers.add("x-correlation-id", correlationId);
             }
-            final RequestEntity<BookingRequestDto> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/rentals"));
+            final RequestEntity<RentalRequestDto> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/rentals"));
 
             // act
-            final ResponseEntity<BookingConfirmationDto> response = testRestTemplate.exchange(requestEntity, BookingConfirmationDto.class);
+            final ResponseEntity<RentalConfirmationDto> response = testRestTemplate.exchange(requestEntity, RentalConfirmationDto.class);
 
             // assert
             assertThat(response)
@@ -87,8 +95,8 @@ class RentalApiTest {
             await()
                     .atMost(5, TimeUnit.SECONDS)
                     .untilAsserted(() -> {
-                        final ArgumentCaptor<Booking> userArgument = ArgumentCaptor.forClass(Booking.class);
-                        verify(bookingConsumer).listenJms(userArgument.capture());
+                        final ArgumentCaptor<RentalMessage> userArgument = ArgumentCaptor.forClass(RentalMessage.class);
+                        verify(rentalConsumer).listenJms(userArgument.capture());
                         assertThat(userArgument.getValue()).isNotNull();
                     });
         }
@@ -98,14 +106,14 @@ class RentalApiTest {
         @ValueSource(strings = "56750ce5-0e45-4664-9caa-fc0fe1d5b4c9")
         void status422(final String correlationId) {
             // arrange
-            final BookingRequestDto requestBody = new BookingRequestDto(UUID.randomUUID(), LocalDate.of(2026, 1, 1), LocalDate.of(9999, 12, 31));
+            final RentalRequestDto requestBody = new RentalRequestDto(UUID.randomUUID(), LocalDate.of(2026, 1, 1), LocalDate.of(9999, 12, 31));
 
             final HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth("user", "password");
             if (correlationId != null) {
                 headers.add("x-correlation-id", correlationId);
             }
-            final RequestEntity<BookingRequestDto> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/rentals"));
+            final RequestEntity<RentalRequestDto> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.POST, URI.create("/v1/rentals"));
 
             // act
             final ResponseEntity<ProblemDetail> response = testRestTemplate.exchange(requestEntity, ProblemDetail.class);
@@ -130,7 +138,7 @@ class RentalApiTest {
     }
 
     @Nested
-    class DeleteBookingTests {
+    class DeleteRentalTests {
 
         @BeforeEach
         void setUp() {
@@ -143,14 +151,19 @@ class RentalApiTest {
         @ValueSource(strings = "56750ce5-0e45-4664-9caa-fc0fe1d5b4c9")
         void status200(final String correlationId) {
             // arrange
-            final String requestBody = "123-45-6789";
+            final UUID id = testDataManager.persistAndGetId(Rental.builder()
+                    .vehicleId(UUID.randomUUID())
+                    .insuranceId(UUID.randomUUID())
+                    .from(LocalDate.of(2026, 1, 1))
+                    .upto(LocalDate.of(2026, 1, 31))
+                    .build());
 
             final HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth("user", "password");
             if (correlationId != null) {
                 headers.add("x-correlation-id", correlationId);
             }
-            final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.DELETE, URI.create("/v1/rentals/" + UUID.randomUUID()));
+            final RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.DELETE, URI.create("/v1/rentals/" + id));
 
             // act
             final ResponseEntity<Void> response = testRestTemplate.exchange(requestEntity, Void.class);
@@ -170,8 +183,8 @@ class RentalApiTest {
             await()
                     .atMost(5, TimeUnit.SECONDS)
                     .untilAsserted(() -> {
-                        final ArgumentCaptor<ConsumerRecord<String, Booking>> recordArgument = ArgumentCaptor.forClass(ConsumerRecord.class);
-                        verify(bookingConsumer).listenKafka(recordArgument.capture());
+                        final ArgumentCaptor<ConsumerRecord<String, RentalMessage>> recordArgument = ArgumentCaptor.forClass(ConsumerRecord.class);
+                        verify(rentalConsumer).listenKafka(recordArgument.capture());
                         assertThat(recordArgument.getValue())
                                 .returns(null, ConsumerRecord::value);
                     });
@@ -185,14 +198,19 @@ class RentalApiTest {
             WireMock.stubFor(WireMock.delete(WireMock.urlPathTemplate("/v1/insurances/{id}"))
                     .willReturn(WireMock.notFound()));
 
-            final String requestBody = "123-45-6789";
+            final UUID id = testDataManager.persistAndGetId(Rental.builder()
+                    .vehicleId(UUID.randomUUID())
+                    .insuranceId(UUID.randomUUID())
+                    .from(LocalDate.of(2026, 1, 1))
+                    .upto(LocalDate.of(2026, 1, 31))
+                    .build());
 
             final HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth("user", "password");
             if (correlationId != null) {
                 headers.add("x-correlation-id", correlationId);
             }
-            final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.DELETE, URI.create("/v1/rentals/" + UUID.randomUUID()));
+            final RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.DELETE, URI.create("/v1/rentals/" + id));
 
             // act
             final ResponseEntity<ProblemDetail> response = testRestTemplate.exchange(requestEntity, ProblemDetail.class);
@@ -226,14 +244,19 @@ class RentalApiTest {
             WireMock.stubFor(WireMock.delete(WireMock.urlPathTemplate("/v1/insurances/{id}"))
                     .willReturn(WireMock.serverError()));
 
-            final String requestBody = "123-45-6789";
+            final UUID id = testDataManager.persistAndGetId(Rental.builder()
+                    .vehicleId(UUID.randomUUID())
+                    .insuranceId(UUID.randomUUID())
+                    .from(LocalDate.of(2026, 1, 1))
+                    .upto(LocalDate.of(2026, 1, 31))
+                    .build());
 
             final HttpHeaders headers = new HttpHeaders();
             headers.setBasicAuth("user", "password");
             if (correlationId != null) {
                 headers.add("x-correlation-id", correlationId);
             }
-            final RequestEntity<String> requestEntity = new RequestEntity<>(requestBody, headers, HttpMethod.DELETE, URI.create("/v1/rentals/" + UUID.randomUUID()));
+            final RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.DELETE, URI.create("/v1/rentals/" + id));
 
             // act
             final ResponseEntity<ProblemDetail> response = testRestTemplate.exchange(requestEntity, ProblemDetail.class);
