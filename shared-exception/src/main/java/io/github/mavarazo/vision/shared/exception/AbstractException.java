@@ -1,4 +1,4 @@
-package io.github.mavarazo.vision.common.exception;
+package io.github.mavarazo.vision.shared.exception;
 
 import lombok.Getter;
 import org.springframework.core.NestedRuntimeException;

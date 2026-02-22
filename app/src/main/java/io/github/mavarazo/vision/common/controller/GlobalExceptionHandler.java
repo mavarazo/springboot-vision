@@ -1,8 +1,8 @@
 package io.github.mavarazo.vision.common.controller;
 
-import io.github.mavarazo.vision.common.exception.Alertable;
-import io.github.mavarazo.vision.common.exception.BusinessException;
-import io.github.mavarazo.vision.common.exception.TechnicalException;
+import io.github.mavarazo.vision.shared.exception.Alertable;
+import io.github.mavarazo.vision.shared.exception.BusinessException;
+import io.github.mavarazo.vision.shared.exception.TechnicalException;
 import io.micrometer.tracing.BaggageView;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.TraceContext;

@@ -1,9 +1,9 @@
 package io.github.mavarazo.vision.rental.service;
 
-import io.github.mavarazo.vision.common.exception.TechnicalException;
 import io.github.mavarazo.vision.insurance.service.InsuranceAdapter;
 import io.github.mavarazo.vision.rental.exception.NotFoundException;
 import io.github.mavarazo.vision.rental.model.Booking;
+import io.github.mavarazo.vision.shared.exception.TechnicalException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

@@ -1,6 +1,6 @@
 package io.github.mavarazo.vision.rental.exception;
 
-import io.github.mavarazo.vision.common.exception.BusinessException;
+import io.github.mavarazo.vision.shared.exception.BusinessException;
 import org.springframework.http.HttpStatus;
 
 import java.util.Map;

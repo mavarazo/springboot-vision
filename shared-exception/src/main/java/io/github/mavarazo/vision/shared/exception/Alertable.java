@@ -1,4 +1,4 @@
-package io.github.mavarazo.vision.common.exception;
+package io.github.mavarazo.vision.shared.exception;
 
 public interface Alertable {
     // marker interface

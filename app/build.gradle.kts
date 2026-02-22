@@ -17,14 +17,16 @@ dependencies {
 
     // Core
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+    implementation(project(":shared-exception"))
+    implementation(project(":shared-tracing"))
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("net.datafaker:datafaker:2.5.4")
 
-    // Observation
-    implementation(project(":shared-tracing"))
 
     // JMS
     implementation("org.springframework.boot:spring-boot-starter-artemis")

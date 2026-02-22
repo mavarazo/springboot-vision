@@ -1,5 +1,5 @@
 rootProject.name = "vision"
 
 include("app")
-
-include(":shared-tracing")
+include("shared-exception")
+include("shared-tracing")
