@@ -4,7 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import io.github.mavarazo.TestDataManager;
 import io.github.mavarazo.TestDataManagerTestConfig;
 import io.github.mavarazo.vision.rental.model.RentalConfirmationDto;
-import io.github.mavarazo.vision.rental.model.RentalMessage;
+import io.github.mavarazo.vision.shared.kafka.model.RentalMessage;
 import io.github.mavarazo.vision.rental.model.RentalRequestDto;
 import io.github.mavarazo.vision.rental.service.RentalConsumer;
 import io.github.mavarazo.vision.shared.persistence.entity.Rental;

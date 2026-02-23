@@ -1,4 +1,4 @@
-package io.github.mavarazo.vision.accident.model;
+package io.github.mavarazo.vision.shared.kafka.model;
 
 import java.util.UUID;
 

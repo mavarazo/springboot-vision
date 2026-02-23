@@ -1,6 +1,6 @@
 package io.github.mavarazo.vision.rental.service;
 
-import io.github.mavarazo.vision.rental.model.RentalMessage;
+import io.github.mavarazo.vision.shared.kafka.model.RentalMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.jms.annotation.JmsListener;

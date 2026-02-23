@@ -1,6 +1,6 @@
 package io.github.mavarazo.vision.accident.service;
 
-import io.github.mavarazo.vision.accident.model.AccidentMessage;
+import io.github.mavarazo.vision.shared.kafka.model.AccidentMessage;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

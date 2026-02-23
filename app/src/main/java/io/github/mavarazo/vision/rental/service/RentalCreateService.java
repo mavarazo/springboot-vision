@@ -2,8 +2,8 @@ package io.github.mavarazo.vision.rental.service;
 
 import io.github.mavarazo.vision.rental.exception.FraudException;
 import io.github.mavarazo.vision.rental.model.RentalConfirmationDto;
-import io.github.mavarazo.vision.rental.model.RentalMessage;
 import io.github.mavarazo.vision.rental.model.RentalRequestDto;
+import io.github.mavarazo.vision.shared.kafka.model.RentalMessage;
 import io.github.mavarazo.vision.shared.persistence.entity.Rental;
 import io.github.mavarazo.vision.shared.persistence.repository.RentalRepository;
 import lombok.RequiredArgsConstructor;

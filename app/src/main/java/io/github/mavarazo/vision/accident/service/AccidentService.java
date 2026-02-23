@@ -1,6 +1,6 @@
 package io.github.mavarazo.vision.accident.service;
 
-import io.github.mavarazo.vision.accident.model.AccidentMessage;
+import io.github.mavarazo.vision.shared.kafka.model.AccidentMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

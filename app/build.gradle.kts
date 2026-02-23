@@ -20,6 +20,7 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     implementation(project(":shared-exception"))
+    implementation(project(":shared-kafka"))
     implementation(project(":shared-persistence"))
     implementation(project(":shared-tracing"))
 
@@ -33,9 +34,6 @@ dependencies {
     // JMS
     implementation("org.springframework.boot:spring-boot-starter-artemis")
     runtimeOnly("org.apache.activemq:artemis-jakarta-server")
-
-    // Kafka
-    implementation("org.springframework.boot:spring-boot-starter-kafka")
 
     // Testing
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
