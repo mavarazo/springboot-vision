@@ -1,8 +1,10 @@
 rootProject.name = "vision"
 
 include("app")
-include("shared-exception")
-include("shared-tracing")
+include("intranet")
 
-include("shared-persistence")
+include("shared-exception")
 include("shared-kafka")
+include("shared-persistence")
+include("shared-testing")
+include("shared-tracing")

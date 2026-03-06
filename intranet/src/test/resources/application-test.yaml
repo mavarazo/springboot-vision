@@ -12,7 +12,3 @@ spring:
   kafka:
     properties:
       schema.registry.url: http://localhost
-
-vision:
-  insurance:
-    endpoint: https://localhost

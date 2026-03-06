@@ -1,6 +1,6 @@
 package io.github.mavarazo.vision.vehicle;
 
-import io.github.mavarazo.vision.vehicle.model.VehicleDto;
+import io.github.mavarazo.app.vehicle.model.VehicleDto;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

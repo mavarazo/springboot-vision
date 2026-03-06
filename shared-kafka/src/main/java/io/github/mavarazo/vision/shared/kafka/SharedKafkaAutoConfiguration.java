@@ -6,8 +6,10 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer;
+import org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -17,7 +19,8 @@ import org.springframework.kafka.listener.ContainerProperties;
 
 import java.util.Map;
 
-@AutoConfiguration
+@AutoConfiguration(after = KafkaAutoConfiguration.class)
+@ConditionalOnBean(type = "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration")
 @EnableKafka
 public class SharedKafkaAutoConfiguration {
 

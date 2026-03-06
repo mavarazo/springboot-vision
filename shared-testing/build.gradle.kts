@@ -1,6 +1,7 @@
+
 plugins {
-    `java-library`
-    id("org.springframework.boot") version "4.0.2" apply false
+    java
+    id("org.springframework.boot") version "4.0.2"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -16,8 +17,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
 
     // Core
-    api("org.springframework.boot:spring-boot-starter-kafka")
-    api("io.confluent:kafka-avro-serializer:8.1.1")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 }
 
 tasks.test {

@@ -1,14 +1,14 @@
 package io.github.mavarazo.vision.rental;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import io.github.mavarazo.TestDataManager;
-import io.github.mavarazo.TestDataManagerTestConfig;
-import io.github.mavarazo.vision.rental.model.RentalConfirmationDto;
+import io.github.mavarazo.app.rental.model.RentalConfirmationDto;
+import io.github.mavarazo.app.rental.model.RentalRequestDto;
+import io.github.mavarazo.app.rental.service.RentalConsumer;
 import io.github.mavarazo.vision.shared.kafka.model.RentalMessage;
-import io.github.mavarazo.vision.rental.model.RentalRequestDto;
-import io.github.mavarazo.vision.rental.service.RentalConsumer;
+import io.github.mavarazo.vision.shared.persistence.entity.KafkaMessage;
 import io.github.mavarazo.vision.shared.persistence.entity.Rental;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import io.github.mavarazo.vision.shared.testing.TestDataManager;
+import io.github.mavarazo.vision.shared.testing.TestDataManagerTestConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,7 +26,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.wiremock.spring.ConfigureWireMock;
@@ -45,10 +44,6 @@ import static org.mockito.Mockito.verify;
 @ActiveProfiles("test")
 @AutoConfigureTestRestTemplate
 @Import(TestDataManagerTestConfig.class)
-@EmbeddedKafka(
-        partitions = 1,
-        topics = {"rental"}
-)
 @EnableWireMock(
         @ConfigureWireMock(baseUrlProperties = "vision.insurance.endpoint")
 )
@@ -62,6 +57,11 @@ class RentalApiTest {
 
     @MockitoSpyBean
     private RentalConsumer rentalConsumer;
+
+    @BeforeEach
+    void setUp() {
+        testDataManager.truncateAll();
+    }
 
     @Nested
     class CreateRentalTests {
@@ -180,14 +180,13 @@ class RentalApiTest {
                             .isNotEmpty()
                     );
 
-            await()
-                    .atMost(5, TimeUnit.SECONDS)
-                    .untilAsserted(() -> {
-                        final ArgumentCaptor<ConsumerRecord<String, RentalMessage>> recordArgument = ArgumentCaptor.forClass(ConsumerRecord.class);
-                        verify(rentalConsumer).listenKafka(recordArgument.capture());
-                        assertThat(recordArgument.getValue())
-                                .returns(null, ConsumerRecord::value);
-                    });
+            assertThat(testDataManager.findAll(KafkaMessage.class))
+                    .singleElement()
+                    .returns("rental", KafkaMessage::getDestination)
+                    .returns(id.toString(), KafkaMessage::getKey)
+                    .returns(null, KafkaMessage::getPayload)
+                    .returns(null, KafkaMessage::getName)
+                    .returns(null, KafkaMessage::getMessage);
         }
 
         @ParameterizedTest
